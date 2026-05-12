@@ -19,9 +19,6 @@ export default function Booking() {
   const [searchParams] = useSearchParams();
   const { user } = useUser();
 
-  const services = useQuery(api.services.list) ?? [];
-  const createBooking = useMutation(api.bookings.create);
-
   const initialService = searchParams.get('service') || '';
   const [step, setStep] = React.useState(1);
   const [formData, setFormData] = React.useState({
@@ -34,6 +31,16 @@ export default function Booking() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isSuccess, setIsSuccess] = React.useState(false);
   const [error, setError] = React.useState('');
+
+  const services = useQuery(api.services.list) ?? [];
+  const existingBookings = useQuery(api.bookings.listByDate, formData.date ? { date: formData.date } : 'skip') ?? [];
+  const createBooking = useMutation(api.bookings.create);
+
+  const takenTimes = new Set(
+    existingBookings
+      .filter((b) => b.status !== 'cancelled')
+      .map((b) => b.time)
+  );
 
   const handleNext = () => setStep(s => s + 1);
   const handlePrev = () => setStep(s => s - 1);
@@ -68,7 +75,10 @@ export default function Booking() {
       });
       setIsSuccess(true);
     } catch (err) {
-      setError('حدث خطأ. الرجاء المحاولة مرة أخرى.');
+      const message = err instanceof Error && err.message === 'TIME_SLOT_TAKEN'
+        ? 'عذراً، هذا الموعد محجوز مسبقاً. الرجاء اختيار وقت آخر.'
+        : 'حدث خطأ. الرجاء المحاولة مرة أخرى.';
+      setError(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -206,20 +216,25 @@ export default function Booking() {
                     اختر الوقت المتاح
                   </h3>
                   <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-                    {timeSlots.map((time) => (
-                      <div
-                        key={time}
-                        onClick={() => setFormData({ ...formData, time })}
-                        className={cn(
-                          "py-4 text-center border-2 cursor-pointer font-bold active:scale-[0.97] transition-[border-color,background-color,color,transform] duration-200",
-                          formData.time === time
-                            ? "bg-brand-primary border-brand-primary text-brand-on-primary scale-105"
-                            : "border-brand-outline-variant hover:border-brand-primary/40 text-brand-on-surface-variant hover:text-brand-primary"
-                        )}
-                      >
-                        {time}
-                      </div>
-                    ))}
+                    {timeSlots.map((time) => {
+                      const taken = takenTimes.has(time);
+                      return (
+                        <div
+                          key={time}
+                          onClick={() => !taken && setFormData({ ...formData, time })}
+                          className={cn(
+                            "py-4 text-center border-2 font-bold transition-[border-color,background-color,color,transform] duration-200",
+                            taken
+                              ? "border-brand-outline-variant/30 bg-brand-surface text-brand-outline-variant/40 cursor-not-allowed line-through"
+                              : "cursor-pointer active:scale-[0.97] border-brand-outline-variant hover:border-brand-primary/40 text-brand-on-surface-variant hover:text-brand-primary",
+                            formData.time === time && !taken
+                              && "bg-brand-primary border-brand-primary text-brand-on-primary scale-105"
+                          )}
+                        >
+                          {time}
+                        </div>
+                      );
+                    })}
                   </div>
                   <div className="mt-12 flex justify-between">
                     <button
@@ -281,16 +296,14 @@ export default function Booking() {
                       <div>
                         <label htmlFor="booking-phone" className="block text-sm font-bold text-brand-on-surface-variant mb-2 uppercase tracking-wider">رقـم الـجـوال</label>
                         <div className="relative">
-                          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-outline-variant font-bold text-sm">+966</div>
                           <input
                             id="booking-phone" type="tel"
                             required
-                            pattern="5[0-9]{8}"
                             title="أدخل رقم الجوال الأردني: 0791234567 أو +962791234567"
                             placeholder="0791234567"
                             value={formData.phone}
                             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                            className="w-full bg-brand-surface border-2 border-brand-outline-variant p-4 pr-20 text-brand-on-surface focus:border-brand-primary outline-none"
+                            className="w-full bg-brand-surface border-2 border-brand-outline-variant p-4 pr-12 text-brand-on-surface focus:border-brand-primary outline-none"
                           />
                         </div>
                       </div>

@@ -29,6 +29,18 @@ export const create = mutation({
     price: v.number(),
   },
   handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("bookings")
+      .withIndex("by_date", (q) => q.eq("date", args.date))
+      .collect();
+
+    const conflict = existing.find(
+      (b) => b.time === args.time && b.status !== "cancelled"
+    );
+    if (conflict) {
+      throw new Error("TIME_SLOT_TAKEN");
+    }
+
     return await ctx.db.insert("bookings", { ...args, status: "pending" });
   },
 });
