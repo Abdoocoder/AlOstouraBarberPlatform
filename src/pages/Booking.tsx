@@ -50,9 +50,8 @@ export default function Booking() {
       return;
     }
 
-    if (!/^5[0-9]{8}$/.test(formData.phone)) {
-      setError('الرجاء إدخال رقم جوال صحيح (مثال: 5XXXXXXXX).');
-      setIsSubmitting(false);
+    if (!/^(07[0-9]{8}|\+9627[0-9]{8}|009627[0-9]{8})$/.test(formData.phone)) {
+      setError('الرجاء إدخال رقم جوال أردني صحيح (مثال: 0791234567 أو +962791234567).');
       return;
     }
 
@@ -287,8 +286,8 @@ export default function Booking() {
                             id="booking-phone" type="tel"
                             required
                             pattern="5[0-9]{8}"
-                            title="أدخل رقم الجوال: 5XXXXXXXX"
-                            placeholder="5XXXXXXXX"
+                            title="أدخل رقم الجوال الأردني: 0791234567 أو +962791234567"
+                            placeholder="0791234567"
                             value={formData.phone}
                             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                             className="w-full bg-brand-surface border-2 border-brand-outline-variant p-4 pr-20 text-brand-on-surface focus:border-brand-primary outline-none"
