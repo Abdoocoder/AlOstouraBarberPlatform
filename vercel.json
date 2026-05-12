@@ -6,11 +6,5 @@
     { "source": "/api/(.*)", "destination": "/server/index.ts" },
     { "source": "/webhooks/(.*)", "destination": "/server/index.ts" },
     { "source": "/(.*)", "destination": "/index.html" }
-  ],
-  "env": {
-    "VITE_CLERK_PUBLISHABLE_KEY": "@clerk-publishable-key",
-    "VITE_CONVEX_URL": "@convex-url",
-    "CLERK_SECRET_KEY": "@clerk-secret-key",
-    "CLERK_WEBHOOK_SECRET": "@clerk-webhook-secret"
-  }
+  ]
 }
