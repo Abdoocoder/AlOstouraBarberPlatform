@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   LayoutDashboard, Scissors, Image as ImageIcon, MessageSquare, Settings,
   Calendar, Users, TrendingUp, CheckCircle2, XCircle, Clock, RefreshCw,
-  Plus, Pencil, Trash2, X, ChevronLeft, ChevronRight, Save, Eye,
+  Plus, Pencil, Trash2, X, ChevronLeft, ChevronRight, Save, Eye, Bell,
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useQuery, useMutation } from 'convex/react';
@@ -35,9 +35,52 @@ export default function Admin() {
   usePageTitle('لوحة التحكم');
   const [activeTab, setActiveTab] = React.useState<Tab>('dashboard');
 
+  const allBookings = useQuery(api.bookings.list) ?? [];
+  const pendingCount = allBookings.filter((b) => b.status === 'pending').length;
+
+  const [prevPending, setPrevPending] = React.useState(pendingCount);
+  const [toast, setToast] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (pendingCount > prevPending) {
+      const diff = pendingCount - prevPending;
+      const msg = diff === 1
+        ? 'لديك حجز جديد قيد الانتظار!'
+        : `لديك ${diff} حجوزات جديدة قيد الانتظار!`;
+      setToast(msg);
+      const timer = setTimeout(() => setToast(null), 5000);
+      return () => clearTimeout(timer);
+    }
+    setPrevPending(pendingCount);
+  }, [pendingCount]);
+
   return (
     <div className="py-12 px-6">
       <div className="max-w-7xl mx-auto">
+        {/* Toast Notification */}
+        <AnimatePresence>
+          {toast && (
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.95 }}
+              transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
+              className="fixed top-6 left-1/2 -translate-x-1/2 z-[200] bg-brand-surface-container border border-brand-primary/40 px-6 py-4 shadow-2xl flex items-center gap-3"
+              role="alert"
+            >
+              <Bell className="text-brand-primary w-5 h-5" />
+              <span className="font-bold text-sm">{toast}</span>
+              <button
+                onClick={() => setToast(null)}
+                className="p-2 text-brand-on-surface-variant hover:text-brand-primary transition-colors"
+                aria-label="إغلاق الإشعار"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-6">
           <div>
             <h1 className="text-3xl font-black mb-2">لوحة التحكم <span className="text-brand-primary">الأسطورية</span></h1>
@@ -64,6 +107,11 @@ export default function Admin() {
             >
               <tab.icon className="w-4 h-4" />
               {tab.label}
+              {tab.id === 'dashboard' && pendingCount > 0 && (
+                <span className="bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 leading-none">
+                  {pendingCount}
+                </span>
+              )}
             </button>
           ))}
         </div>
