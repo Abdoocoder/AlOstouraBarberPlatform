@@ -22,11 +22,74 @@
   --color-brand-on-primary-container: #554300;
   --color-brand-secondary: #c6c6c7;
   --color-brand-on-secondary: #2f3131;
+
+  --ease-out-custom: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out-custom: cubic-bezier(0.77, 0, 0.175, 1);
 }
 
 @layer base {
   body {
     @apply bg-brand-surface text-brand-on-surface font-sans antialiased;
     min-height: 100vh;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  *:focus-visible {
+    @apply outline-none ring-2 ring-brand-primary ring-offset-2 ring-offset-brand-surface;
+  }
+
+  input, select, textarea {
+    @apply outline-none;
+  }
+
+  input:focus-visible, select:focus-visible, textarea:focus-visible {
+    @apply ring-2 ring-brand-primary ring-offset-2 ring-offset-brand-surface;
+  }
+}
+
+@layer utilities {
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .safe-area-left {
+    padding-left: env(safe-area-inset-left);
+  }
+  .safe-area-right {
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+@layer utilities {
+  .press-active {
+    transition-property: transform;
+    transition-duration: 160ms;
+    transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  .press-active:active {
+    transform: scale(0.97);
+  }
+  .press-active-sm {
+    transition-property: transform;
+    transition-duration: 160ms;
+    transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  .press-active-sm:active {
+    transform: scale(0.95);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }

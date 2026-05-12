@@ -2,8 +2,12 @@ import * as React from 'react';
 import { motion } from 'motion/react';
 import { Scissors, Star, Users, Clock, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
+import { usePageTitle } from '../lib/usePageTitle';
 
 export default function Home() {
+  usePageTitle('الرئيسية');
   return (
     <div className="relative">
       {/* Hero Section */}
@@ -12,6 +16,7 @@ export default function Home() {
           <img 
             src="https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&q=80&w=2000" 
             alt="Barbershop Atmosphere" 
+            width="2000" height="1333"
             className="w-full h-full object-cover opacity-30 grayscale"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-brand-surface via-transparent to-brand-surface/80" />
@@ -21,7 +26,7 @@ export default function Home() {
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
+            transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1] }}
           >
             <h2 className="text-brand-primary font-black tracking-[0.2em] mb-4 text-sm md:text-base uppercase flex items-center justify-center gap-3">
               <span className="h-[2px] w-8 bg-brand-primary" />
@@ -38,7 +43,7 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link 
                 to="/booking"
-                className="group relative px-10 py-5 bg-brand-primary text-brand-on-primary font-black rounded-sm overflow-hidden"
+                className="group relative px-10 py-5 bg-brand-primary text-brand-on-primary font-black rounded-sm overflow-hidden press-active"
               >
                 <span className="relative z-10 flex items-center gap-2">
                   احجز موعدك الآن
@@ -53,7 +58,7 @@ export default function Home() {
               </Link>
               <Link 
                 to="/services"
-                className="px-10 py-5 border border-brand-outline-variant hover:border-brand-primary transition-colors font-black rounded-sm"
+                className="px-10 py-5 border border-brand-outline-variant hover:border-brand-primary transition-[color,background-color,border-color,transform] font-black rounded-sm active:scale-[0.97]"
               >
                 استعرض خدماتنا
               </Link>
@@ -64,7 +69,7 @@ export default function Home() {
         {/* Scroll Indicator */}
         <motion.div 
           animate={{ y: [0, 10, 0] }}
-          transition={{ repeat: Infinity, duration: 2 }}
+          transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
           className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
         >
           <div className="w-[1px] h-12 bg-gradient-to-b from-brand-primary to-transparent" />
@@ -85,6 +90,7 @@ export default function Home() {
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
+              transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
               className="text-center"
             >
               <stat.icon className="w-10 h-10 text-brand-primary mx-auto mb-4" />
@@ -118,7 +124,7 @@ export default function Home() {
                 </li>
               ))}
             </ul>
-            <Link to="/gallery" className="text-brand-primary font-black flex items-center gap-2 group">
+            <Link to="/gallery" className="text-brand-primary font-black inline-flex items-center gap-2 group press-active py-3">
               شاهد أعمالنا 
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform rtl:rotate-180" />
             </Link>
@@ -128,11 +134,59 @@ export default function Home() {
              <img 
                src="https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&q=80&w=1000" 
                alt="Barber working" 
-               className="relative z-10 rounded-sm shadow-2xl grayscale hover:grayscale-0 transition-all duration-700"
+               width="1000" height="1500"
+               className="relative z-10 rounded-sm shadow-2xl grayscale transition-[transform,filter] duration-300 hover:grayscale-0 max-md:grayscale-0"
              />
           </div>
         </div>
       </section>
+
+      {/* Team Section */}
+      <TeamSection />
     </div>
+  );
+}
+
+function TeamSection() {
+  const barbers = useQuery(api.barbers.list) ?? [];
+
+  if (barbers.length === 0) return null;
+
+  return (
+    <section className="py-24 px-6 bg-brand-surface-container-low">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-16">
+          <h2 className="text-brand-primary font-black uppercase tracking-widest text-sm mb-4">فريق الأسطورة</h2>
+          <h3 className="text-4xl md:text-5xl font-black mb-6">حلاقينا الخبراء</h3>
+          <p className="text-brand-on-surface-variant text-lg max-w-2xl mx-auto">
+            نخبة من أمهر الحلاقين المحترفين لضمان تجربة أسطورية في كل زيارة.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          {barbers.sort((a, b) => a.sortOrder - b.sortOrder).map((barber, i) => (
+            <motion.div
+              key={barber._id}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1, duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+              className="bg-brand-surface-container border border-brand-outline-variant hover:border-brand-primary/50 transition-colors p-8 flex flex-col items-center text-center group"
+            >
+              <div className="w-32 h-32 rounded-full overflow-hidden mb-6 border-2 border-brand-outline-variant group-hover:border-brand-primary transition-colors duration-300">
+                <img
+                  src={barber.imageUrl}
+                  alt={barber.name}
+                  className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-[transform,filter] duration-700 group-hover:scale-110"
+                />
+              </div>
+              <h4 className="text-2xl font-black mb-1">{barber.name}</h4>
+              <p className="text-brand-primary font-bold text-sm mb-4">{barber.role}</p>
+              <p className="text-brand-on-surface-variant text-sm leading-relaxed">{barber.bio}</p>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }

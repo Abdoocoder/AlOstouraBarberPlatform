@@ -1,26 +1,28 @@
 import * as React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useSearchParams } from 'react-router-dom';
-import { Calendar, Clock, User, Phone, CheckCircle, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Calendar, Clock, User, CheckCircle, ChevronRight, ChevronLeft } from 'lucide-react';
 import { cn } from '../lib/utils';
-
-const services = [
-  { id: '1', name: 'قصة الأسطورة', price: 150 },
-  { id: '2', name: 'قصة كلاسيكية', price: 100 },
-  { id: '3', name: 'تحديد وتدريج اللحية', price: 80 },
-  { id: '4', name: 'حلاقة ملكية', price: 120 },
-  { id: '5', name: 'تنظيف بشرة ملكي', price: 200 },
-];
+import { useQuery, useMutation } from 'convex/react';
+import { useUser } from '@clerk/clerk-react';
+import { api } from '../../convex/_generated/api';
+import type { Id } from '../../convex/_generated/dataModel';
+import { usePageTitle } from '../lib/usePageTitle';
 
 const timeSlots = [
   '10:00 ص', '10:45 ص', '11:30 ص', '12:15 م', '01:00 م',
-  '04:00 م', '04:45 م', '05:30 م', '06:15 م', '07:00 م', '07:45 م', '08:30 م', '09:15 م'
+  '04:00 م', '04:45 م', '05:30 م', '06:15 م', '07:00 م', '07:45 م', '08:30 م', '09:15 م',
 ];
 
 export default function Booking() {
+  usePageTitle('احجز موعدك');
   const [searchParams] = useSearchParams();
-  const initialService = searchParams.get('service') || '';
+  const { user } = useUser();
 
+  const services = useQuery(api.services.list) ?? [];
+  const createBooking = useMutation(api.bookings.create);
+
+  const initialService = searchParams.get('service') || '';
   const [step, setStep] = React.useState(1);
   const [formData, setFormData] = React.useState({
     serviceId: initialService,
@@ -29,29 +31,56 @@ export default function Booking() {
     name: '',
     phone: '',
   });
-
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isSuccess, setIsSuccess] = React.useState(false);
+  const [error, setError] = React.useState('');
 
   const handleNext = () => setStep(s => s + 1);
   const handlePrev = () => setStep(s => s - 1);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    // Simulate API call
-    setTimeout(() => {
+    setError('');
+
+    const selectedService = services.find(s => s._id === formData.serviceId);
+    if (!selectedService) {
+      setError('الرجاء اختيار خدمة.');
       setIsSubmitting(false);
+      return;
+    }
+
+    if (!/^5[0-9]{8}$/.test(formData.phone)) {
+      setError('الرجاء إدخال رقم جوال صحيح (مثال: 5XXXXXXXX).');
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      await createBooking({
+        serviceId: formData.serviceId as Id<'services'>,
+        serviceName: selectedService.name,
+        date: formData.date,
+        time: formData.time,
+        customerName: formData.name,
+        customerPhone: formData.phone,
+        clerkUserId: user?.id,
+        price: selectedService.price,
+      });
       setIsSuccess(true);
-    }, 2000);
+    } catch (err) {
+      setError('حدث خطأ. الرجاء المحاولة مرة أخرى.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const selectedService = services.find(s => s.id === formData.serviceId);
+  const selectedService = services.find(s => s._id === formData.serviceId);
 
   if (isSuccess) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center px-6">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           className="bg-brand-surface-container p-12 text-center max-w-md w-full border border-brand-primary/20"
@@ -61,11 +90,12 @@ export default function Booking() {
           </div>
           <h2 className="text-3xl font-black mb-4">تم تأكيد حجزك!</h2>
           <p className="text-brand-on-surface-variant mb-8 leading-relaxed">
-            شكرًا لك {formData.name}.<br />لقد تم حجز موعد {selectedService?.name} في يوم {formData.date} الساعة {formData.time}. سنتصل بك للتأكيد.
+            شكرًا لك {formData.name}.<br />
+            لقد تم حجز موعد {selectedService?.name} في يوم {formData.date} الساعة {formData.time}. سنتصل بك للتأكيد.
           </p>
-          <button 
+          <button
             onClick={() => window.location.href = '/'}
-            className="w-full py-4 bg-brand-primary text-brand-on-primary font-bold hover:scale-105 transition-transform"
+            className="w-full py-4 bg-brand-primary text-brand-on-primary font-bold press-active hover:scale-105"
           >
             العودة للرئيسية
           </button>
@@ -80,12 +110,11 @@ export default function Booking() {
         <div className="mb-12 text-center">
           <h2 className="text-brand-primary font-black uppercase tracking-widest text-sm mb-4">نظام الحجز الذكي</h2>
           <h1 className="text-4xl md:text-5xl font-black mb-6">احـجـز مـقـعـدك الآن</h1>
-          
-          {/* Progress Bar */}
+
           <div className="flex items-center justify-center gap-4 mt-10">
             {[1, 2, 3].map((i) => (
               <React.Fragment key={i}>
-                <div 
+                <div
                   className={cn(
                     "w-10 h-10 rounded-full flex items-center justify-center font-black transition-colors",
                     step >= i ? "bg-brand-primary text-brand-on-primary" : "bg-brand-surface-container text-brand-on-surface-variant"
@@ -117,26 +146,32 @@ export default function Booking() {
                   <div className="space-y-8">
                     <div>
                       <label className="block text-sm font-bold text-brand-on-surface-variant mb-4 uppercase tracking-wider">الخدمة المطلوبة</label>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {services.map((s) => (
-                          <div 
-                            key={s.id}
-                            onClick={() => setFormData({ ...formData, serviceId: s.id })}
-                            className={cn(
-                              "p-4 border-2 cursor-pointer transition-all flex justify-between items-center",
-                              formData.serviceId === s.id ? "border-brand-primary bg-brand-primary/5" : "border-brand-outline-variant hover:border-brand-primary/40"
-                            )}
-                          >
-                            <span className="font-bold">{s.name}</span>
-                            <span className="text-brand-primary font-black">{s.price} ر.س</span>
-                          </div>
-                        ))}
-                      </div>
+                      {services.length === 0 ? (
+                        <div className="text-brand-on-surface-variant italic">جاري تحميل الخدمات...</div>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {services.map((s) => (
+                            <div
+                              key={s._id}
+                              onClick={() => setFormData({ ...formData, serviceId: s._id })}
+                              className={cn(
+                                "p-4 border-2 cursor-pointer active:scale-[0.97] transition-[border-color,background-color,color,transform] duration-200 flex justify-between items-center",
+                                formData.serviceId === s._id
+                                  ? "border-brand-primary bg-brand-primary/5 scale-[1.02]"
+                                  : "border-brand-outline-variant hover:border-brand-primary/40"
+                              )}
+                            >
+                              <span className="font-bold">{s.name}</span>
+                              <span className="text-brand-primary font-black">{s.price} د.أ</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <div>
-                      <label className="block text-sm font-bold text-brand-on-surface-variant mb-4 uppercase tracking-wider">تاريخ الموعد</label>
-                      <input 
-                        type="date"
+                      <label htmlFor="booking-date" className="block text-sm font-bold text-brand-on-surface-variant mb-4 uppercase tracking-wider">تاريخ الموعد</label>
+                      <input
+                        id="booking-date" type="date"
                         required
                         min={new Date().toISOString().split('T')[0]}
                         onChange={(e) => setFormData({ ...formData, date: e.target.value })}
@@ -145,11 +180,11 @@ export default function Booking() {
                     </div>
                   </div>
                   <div className="mt-12 flex justify-end">
-                    <button 
+                    <button
                       type="button"
                       disabled={!formData.serviceId || !formData.date}
                       onClick={handleNext}
-                      className="px-10 py-4 bg-brand-primary text-brand-on-primary font-black flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 transition-transform"
+                      className="px-10 py-4 bg-brand-primary text-brand-on-primary font-black flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed press-active"
                     >
                       التالي
                       <ChevronLeft className="w-5 h-5 rtl:hidden" />
@@ -173,12 +208,14 @@ export default function Booking() {
                   </h3>
                   <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
                     {timeSlots.map((time) => (
-                      <div 
+                      <div
                         key={time}
                         onClick={() => setFormData({ ...formData, time })}
                         className={cn(
-                          "py-3 text-center border-2 cursor-pointer font-bold transition-all",
-                          formData.time === time ? "bg-brand-primary border-brand-primary text-brand-on-primary" : "border-brand-outline-variant hover:border-brand-primary/40 text-brand-on-surface-variant hover:text-brand-primary"
+                          "py-4 text-center border-2 cursor-pointer font-bold active:scale-[0.97] transition-[border-color,background-color,color,transform] duration-200",
+                          formData.time === time
+                            ? "bg-brand-primary border-brand-primary text-brand-on-primary scale-105"
+                            : "border-brand-outline-variant hover:border-brand-primary/40 text-brand-on-surface-variant hover:text-brand-primary"
                         )}
                       >
                         {time}
@@ -186,20 +223,20 @@ export default function Booking() {
                     ))}
                   </div>
                   <div className="mt-12 flex justify-between">
-                    <button 
+                    <button
                       type="button"
                       onClick={handlePrev}
-                      className="px-10 py-4 border-2 border-brand-outline-variant font-black flex items-center gap-3"
+                      className="px-10 py-4 border-2 border-brand-outline-variant font-black flex items-center gap-3 press-active"
                     >
                       <ChevronRight className="w-5 h-5 rtl:hidden" />
                       <ChevronLeft className="w-5 h-5 ltr:hidden" />
                       السابق
                     </button>
-                    <button 
+                    <button
                       type="button"
                       disabled={!formData.time}
                       onClick={handleNext}
-                      className="px-10 py-4 bg-brand-primary text-brand-on-primary font-black flex items-center gap-3 disabled:opacity-50 hover:scale-105 transition-transform"
+                      className="px-10 py-4 bg-brand-primary text-brand-on-primary font-black flex items-center gap-3 disabled:opacity-50 press-active"
                     >
                       التالي
                       <ChevronLeft className="w-5 h-5 rtl:hidden" />
@@ -221,29 +258,38 @@ export default function Booking() {
                     <User className="text-brand-primary" />
                     بيانات التواصل والـتأكيد
                   </h3>
+                  {error && (
+                    <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 text-red-500 font-bold text-sm">
+                      {error}
+                    </div>
+                  )}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
                     <div className="space-y-6">
                       <div>
-                        <label className="block text-sm font-bold text-brand-on-surface-variant mb-2 uppercase tracking-wider">الاسـم الـكـامـل</label>
+                        <label htmlFor="booking-name" className="block text-sm font-bold text-brand-on-surface-variant mb-2 uppercase tracking-wider">الاسـم الـكـامـل</label>
                         <div className="relative">
                           <User className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-outline-variant w-5 h-5" />
-                          <input 
-                            type="text"
+                          <input
+                            id="booking-name" type="text"
                             required
                             placeholder="مثال: أحمد محمد"
+                            value={formData.name}
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                             className="w-full bg-brand-surface border-2 border-brand-outline-variant p-4 pr-12 text-brand-on-surface focus:border-brand-primary outline-none"
                           />
                         </div>
                       </div>
                       <div>
-                        <label className="block text-sm font-bold text-brand-on-surface-variant mb-2 uppercase tracking-wider">رقـم الـجـوال</label>
+                        <label htmlFor="booking-phone" className="block text-sm font-bold text-brand-on-surface-variant mb-2 uppercase tracking-wider">رقـم الـجـوال</label>
                         <div className="relative">
                           <div className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-outline-variant font-bold text-sm">+966</div>
-                          <input 
-                            type="tel"
+                          <input
+                            id="booking-phone" type="tel"
                             required
+                            pattern="5[0-9]{8}"
+                            title="أدخل رقم الجوال: 5XXXXXXXX"
                             placeholder="5XXXXXXXX"
+                            value={formData.phone}
                             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                             className="w-full bg-brand-surface border-2 border-brand-outline-variant p-4 pr-20 text-brand-on-surface focus:border-brand-primary outline-none"
                           />
@@ -251,41 +297,41 @@ export default function Booking() {
                       </div>
                     </div>
                     <div className="bg-brand-surface p-6 border-2 border-brand-primary/10 flex flex-col justify-between">
-                       <div>
-                         <h4 className="font-black text-brand-primary mb-4 underline">ملخص الحجز</h4>
-                         <div className="space-y-3 text-sm font-bold">
-                           <div className="flex justify-between">
-                             <span className="text-brand-on-surface-variant italic">الخدمة:</span>
-                             <span>{selectedService?.name}</span>
-                           </div>
-                           <div className="flex justify-between">
-                             <span className="text-brand-on-surface-variant italic">التاريخ:</span>
-                             <span>{formData.date}</span>
-                           </div>
-                           <div className="flex justify-between">
-                             <span className="text-brand-on-surface-variant italic">الوقت:</span>
-                             <span>{formData.time}</span>
-                           </div>
-                         </div>
-                       </div>
-                       <div className="text-right pt-4 border-t border-brand-outline-variant mt-4">
-                         <span className="text-xs text-brand-on-surface-variant block">المجموع الإجمالي</span>
-                         <span className="text-2xl font-black text-brand-primary">{selectedService?.price} ر.س</span>
-                       </div>
+                      <div>
+                        <h4 className="font-black text-brand-primary mb-4 underline">ملخص الحجز</h4>
+                        <div className="space-y-3 text-sm font-bold">
+                          <div className="flex justify-between">
+                            <span className="text-brand-on-surface-variant italic">الخدمة:</span>
+                            <span>{selectedService?.name}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-brand-on-surface-variant italic">التاريخ:</span>
+                            <span>{formData.date}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-brand-on-surface-variant italic">الوقت:</span>
+                            <span>{formData.time}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right pt-4 border-t border-brand-outline-variant mt-4">
+                        <span className="text-sm text-brand-on-surface-variant block">المجموع الإجمالي</span>
+                        <span className="text-2xl font-black text-brand-primary">{selectedService?.price} د.أ</span>
+                      </div>
                     </div>
                   </div>
                   <div className="flex justify-between">
-                    <button 
+                    <button
                       type="button"
                       onClick={handlePrev}
-                      className="px-10 py-4 border-2 border-brand-outline-variant font-black"
+                      className="px-10 py-4 border-2 border-brand-outline-variant font-black press-active"
                     >
                       السابق
                     </button>
-                    <button 
+                    <button
                       type="submit"
                       disabled={isSubmitting || !formData.name || !formData.phone}
-                      className="px-10 py-4 bg-brand-primary text-brand-on-primary font-black flex items-center gap-3 disabled:opacity-50 hover:scale-105 transition-transform"
+                      className="px-10 py-4 bg-brand-primary text-brand-on-primary font-black flex items-center gap-3 disabled:opacity-50 press-active"
                     >
                       {isSubmitting ? 'جاري التأكيد...' : 'تأكيد الحجز النهائي'}
                     </button>

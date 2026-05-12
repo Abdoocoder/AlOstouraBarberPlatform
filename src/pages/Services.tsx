@@ -3,29 +3,24 @@ import { motion } from 'motion/react';
 import { Scissors, Zap, Sparkles, Coffee, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '../lib/utils';
+import { useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
+import { usePageTitle } from '../lib/usePageTitle';
 
-const categories = [
-  { id: 'hair', name: 'خدمات الشعر', icon: Scissors },
-  { id: 'beard', name: 'خدمات اللحية', icon: Zap },
-  { id: 'spa', name: 'سبا وعناية', icon: Sparkles },
-  { id: 'packages', name: 'باقات الأسطورة', icon: Coffee },
-];
-
-const services = [
-  { id: '1', category: 'hair', name: 'قصة الأسطورة', price: 150, duration: 45, description: 'قصة شعر متكاملة مع غسيل وتصفيف احترافي حسب ملامح وجهك.' },
-  { id: '2', category: 'hair', name: 'قصة كلاسيكية', price: 100, duration: 30, description: 'القصة التقليدية التي لا تفقد بريقها أبدًا.' },
-  { id: '3', category: 'beard', name: 'تحديد وتدريج اللحية', price: 80, duration: 30, description: 'نحت اللحية وتحديدها بالأمواس والزيوت الطبيعية.' },
-  { id: '4', category: 'beard', name: 'حلاقة ملكية', price: 120, duration: 40, description: 'حلاقة بالمنشفة الساخنة والزيوت العطرية لتنعيم البشرة.' },
-  { id: '5', category: 'spa', name: 'تنظيف بشرة ملكي', price: 200, duration: 60, description: 'برنامج متكامل لتنظيف المسام وتقشير وتنعيم بشرة الوجه.' },
-  { id: '6', category: 'spa', name: 'مساج فروة الرأس', price: 50, duration: 15, description: 'تجربة استرخاء عميقة لتنشيط الدورة الدموية.' },
-  { id: '7', category: 'packages', name: 'باقة العريس', price: 500, duration: 180, description: 'كل ما يحتاجه العريس من شعر ولحية وبشرة في جلسة واحدة.' },
-  { id: '8', category: 'packages', name: 'باقة الــVIP الأسبوعية', price: 300, duration: 90, description: 'الحل الأمثل للحفاظ على مظهرك أسبوعيًا بأسعار تفضيلية.' },
+const categoryMeta = [
+  { id: 'hair' as const, name: 'خدمات الشعر', icon: Scissors },
+  { id: 'beard' as const, name: 'خدمات اللحية', icon: Zap },
+  { id: 'spa' as const, name: 'سبا وعناية', icon: Sparkles },
+  { id: 'packages' as const, name: 'باقات الأسطورة', icon: Coffee },
 ];
 
 export default function Services() {
+  usePageTitle('خدماتنا');
   const [activeCategory, setActiveCategory] = React.useState('hair');
 
-  const filteredServices = services.filter(s => s.category === activeCategory);
+  const allServices = useQuery(api.services.list) ?? [];
+
+  const filteredServices = allServices.filter(s => s.category === activeCategory);
 
   return (
     <div className="py-20 px-6">
@@ -53,12 +48,12 @@ export default function Services() {
 
         {/* Category Filter */}
         <div className="flex flex-wrap justify-center gap-4 mb-16">
-          {categories.map((cat) => (
+          {categoryMeta.map((cat) => (
             <button
               key={cat.id}
               onClick={() => setActiveCategory(cat.id)}
               className={cn(
-                "flex items-center gap-3 px-8 py-4 rounded-sm font-black transition-all duration-300 border-2",
+                "flex items-center gap-3 px-8 py-4 rounded-sm font-black transition-[background-color,border-color,color,box-shadow,transform] duration-200 border-2 active:scale-[0.97]",
                 activeCategory === cat.id 
                   ? "bg-brand-primary border-brand-primary text-brand-on-primary shadow-[0_0_20px_rgba(242,202,80,0.3)] scale-105" 
                   : "bg-brand-surface-container border-brand-outline-variant text-brand-on-surface-variant hover:border-brand-primary hover:text-brand-primary"
@@ -70,12 +65,21 @@ export default function Services() {
           ))}
         </div>
 
-        {/* Services Grid */}
+        {/* Loading State */}
+        {allServices.length === 0 ? (
+          <div className="min-h-[30vh] flex items-center justify-center">
+            <div className="w-8 h-8 border-4 border-brand-primary border-t-transparent rounded-full animate-spin" role="presentation" />
+          </div>
+        ) : filteredServices.length === 0 ? (
+          <div className="min-h-[30vh] flex items-center justify-center">
+            <p className="text-brand-on-surface-variant font-bold italic">لا توجد خدمات في هذا التصنيف حاليًا.</p>
+          </div>
+        ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {filteredServices.map((service, i) => (
             <motion.div
               layout
-              key={service.id}
+              key={service._id}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: i * 0.05 }}
@@ -84,7 +88,7 @@ export default function Services() {
               <div>
                 <div className="flex justify-between items-start mb-4">
                   <h3 className="text-2xl font-black group-hover:text-brand-primary transition-colors">{service.name}</h3>
-                  <div className="text-2xl font-black text-brand-primary">{service.price} ر.س</div>
+                  <div className="text-2xl font-black text-brand-primary">{service.price} د.أ</div>
                 </div>
                 <p className="text-brand-on-surface-variant mb-6 leading-relaxed">
                   {service.description}
@@ -93,11 +97,11 @@ export default function Services() {
               <div className="flex items-center justify-between pt-6 border-t border-brand-outline-variant">
                 <div className="flex items-center gap-2 text-sm font-bold text-brand-on-surface-variant">
                   <Clock className="w-4 h-4 text-brand-primary" />
-                  <span>{service.duration} دقيقة</span>
+                  <span>{service.durationMinutes} دقيقة</span>
                 </div>
                 <Link 
-                  to={`/booking?service=${service.id}`}
-                  className="text-brand-primary font-bold hover:underline"
+                  to={`/booking?service=${service._id}`}
+                  className="text-brand-primary font-black hover:underline"
                 >
                   احجز الخدمة
                 </Link>
@@ -105,6 +109,7 @@ export default function Services() {
             </motion.div>
           ))}
         </div>
+        )}
 
         {/* Custom Order Box */}
         <motion.div 
@@ -116,7 +121,7 @@ export default function Services() {
           <p className="text-brand-on-surface-variant max-w-xl mx-auto mb-8">
             تواصل معنا لتنسيق باقة خاصة للمناسبات أو المجموعات الكبيرة بأسعار استثنائية.
           </p>
-          <Link to="/contact" className="px-8 py-4 bg-brand-surface border border-brand-primary text-brand-primary font-bold hover:bg-brand-primary hover:text-brand-on-primary transition-all">
+          <Link to="/contact" className="px-8 py-4 bg-brand-surface border border-brand-primary text-brand-primary font-black hover:bg-brand-primary hover:text-brand-on-primary transition-[background-color,color,border-color,transform] duration-200 active:scale-[0.97]">
             تحدث معنا
           </Link>
         </motion.div>
