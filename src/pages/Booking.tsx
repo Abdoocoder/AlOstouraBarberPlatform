@@ -216,25 +216,22 @@ export default function Booking() {
                     اختر الوقت المتاح
                   </h3>
                   <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-                    {timeSlots.map((time) => {
-                      const taken = takenTimes.has(time);
-                      return (
+                    {timeSlots
+                      .filter((time) => !takenTimes.has(time))
+                      .map((time) => (
                         <div
                           key={time}
-                          onClick={() => !taken && setFormData({ ...formData, time })}
+                          onClick={() => setFormData({ ...formData, time })}
                           className={cn(
-                            "py-4 text-center border-2 font-bold transition-[border-color,background-color,color,transform] duration-200",
-                            taken
-                              ? "border-brand-outline-variant/30 bg-brand-surface text-brand-outline-variant/40 cursor-not-allowed line-through"
-                              : "cursor-pointer active:scale-[0.97] border-brand-outline-variant hover:border-brand-primary/40 text-brand-on-surface-variant hover:text-brand-primary",
-                            formData.time === time && !taken
-                              && "bg-brand-primary border-brand-primary text-brand-on-primary scale-105"
+                            "py-4 text-center border-2 font-bold cursor-pointer active:scale-[0.97] transition-[border-color,background-color,color,transform] duration-200",
+                            formData.time === time
+                              ? "bg-brand-primary border-brand-primary text-brand-on-primary scale-105"
+                              : "border-brand-outline-variant hover:border-brand-primary/40 text-brand-on-surface-variant hover:text-brand-primary"
                           )}
                         >
                           {time}
                         </div>
-                      );
-                    })}
+                      ))}
                   </div>
                   <div className="mt-12 flex justify-between">
                     <button
