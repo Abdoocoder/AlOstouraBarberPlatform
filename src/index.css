@@ -1,0 +1,32 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Cairo", ui-sans-serif, system-ui, sans-serif;
+  
+  --color-brand-surface: #131313;
+  --color-brand-surface-dim: #131313;
+  --color-brand-surface-bright: #3a3939;
+  --color-brand-surface-container-lowest: #0e0e0e;
+  --color-brand-surface-container-low: #1c1b1b;
+  --color-brand-surface-container: #201f1f;
+  --color-brand-surface-container-high: #2a2a2a;
+  --color-brand-surface-container-highest: #353534;
+  --color-brand-on-surface: #e5e2e1;
+  --color-brand-on-surface-variant: #d0c5af;
+  --color-brand-outline: #99907c;
+  --color-brand-outline-variant: #4d4635;
+  --color-brand-primary: #f2ca50;
+  --color-brand-on-primary: #3c2f00;
+  --color-brand-primary-container: #d4af37;
+  --color-brand-on-primary-container: #554300;
+  --color-brand-secondary: #c6c6c7;
+  --color-brand-on-secondary: #2f3131;
+}
+
+@layer base {
+  body {
+    @apply bg-brand-surface text-brand-on-surface font-sans antialiased;
+    min-height: 100vh;
+  }
+}
