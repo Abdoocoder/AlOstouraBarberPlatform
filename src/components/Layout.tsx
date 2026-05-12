@@ -59,7 +59,6 @@ export function Navbar() {
                   )}
                 </>
               )}
-              aria-current={({ isActive }: { isActive: boolean }) => isActive ? 'page' : undefined}
             </NavLink>
           ))}
           <Link
