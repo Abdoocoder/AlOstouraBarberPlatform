@@ -103,7 +103,7 @@ export default function Contact() {
 
             <div>
               <h3 className="text-2xl font-black mb-8 underline decoration-brand-primary decoration-4 underline-offset-8">تابعنا على</h3>
-              <div className="flex gap-4">
+              <div className="flex flex-wrap gap-4">
                 {[
                   { icon: Instagram, label: 'إنستجرام', href: 'https://www.instagram.com' },
                   { icon: Facebook, label: 'فيسبوك', href: 'https://web.facebook.com/profile.php?id=100057146302329' },
@@ -115,7 +115,7 @@ export default function Contact() {
                     target="_blank"
                     rel="noopener noreferrer"
                     whileHover={{ y: -5 }}
-                    className="p-5 bg-brand-surface-container border border-brand-outline-variant hover:border-brand-primary transition-[color,background-color,border-color,transform] flex items-center gap-3 font-bold active:scale-[0.97]"
+                    className="p-5 flex-grow sm:flex-grow-0 bg-brand-surface-container border border-brand-outline-variant hover:border-brand-primary transition-[color,background-color,border-color,transform] flex items-center justify-center gap-3 font-bold active:scale-[0.97]"
                   >
                     <social.icon className="text-brand-primary" />
                     <span>{social.label}</span>

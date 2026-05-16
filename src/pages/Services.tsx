@@ -47,13 +47,13 @@ export default function Services() {
         </div>
 
         {/* Category Filter */}
-        <div className="flex flex-wrap justify-center gap-4 mb-16">
+        <div className="flex overflow-x-auto no-scrollbar gap-4 mb-16 -mx-6 px-6 pb-2 scroll-smooth">
           {categoryMeta.map((cat) => (
             <button
               key={cat.id}
               onClick={() => setActiveCategory(cat.id)}
               className={cn(
-                "flex items-center gap-3 px-8 py-4 rounded-sm font-black transition-[background-color,border-color,color,box-shadow,transform] duration-200 border-2 active:scale-[0.97]",
+                "flex items-center gap-3 px-8 py-4 rounded-sm font-black transition-[background-color,border-color,color,box-shadow,transform] duration-200 border-2 active:scale-[0.97] whitespace-nowrap shrink-0",
                 activeCategory === cat.id 
                   ? "bg-brand-primary border-brand-primary text-brand-on-primary shadow-[0_0_20px_rgba(242,202,80,0.3)] scale-105" 
                   : "bg-brand-surface-container border-brand-outline-variant text-brand-on-surface-variant hover:border-brand-primary hover:text-brand-primary"
