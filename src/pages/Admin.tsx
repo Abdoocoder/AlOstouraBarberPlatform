@@ -911,8 +911,13 @@ function Modal({ open, onClose, title, children }: { open: boolean; onClose: () 
     document.body.style.overflow = 'hidden';
     const el = modalRef.current;
     if (!el) return;
-    const closeBtn = el.querySelector<HTMLButtonElement>('button[aria-label="إغلاق"]');
-    closeBtn?.focus();
+
+    // Only focus the close button if focus is not already inside the modal
+    // This prevents focus stealing during re-renders (e.g. while typing)
+    if (!el.contains(document.activeElement)) {
+      const closeBtn = el.querySelector<HTMLButtonElement>('button[aria-label="إغلاق"]');
+      closeBtn?.focus();
+    }
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') { onClose(); return; }

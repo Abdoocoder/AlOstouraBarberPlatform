@@ -23,8 +23,11 @@ export default function Gallery() {
     if (!selectedId) return;
     const el = lightboxRef.current;
     if (!el) return;
-    const closeBtn = el.querySelector<HTMLButtonElement>('button[aria-label="إغلاق المعرض"]');
-    closeBtn?.focus();
+
+    if (!el.contains(document.activeElement)) {
+      const closeBtn = el.querySelector<HTMLButtonElement>('button[aria-label="إغلاق المعرض"]');
+      closeBtn?.focus();
+    }
 
     document.body.style.overflow = 'hidden';
 
