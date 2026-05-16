@@ -66,6 +66,14 @@
   .safe-area-right {
     padding-right: env(safe-area-inset-right);
   }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }
 
 @layer utilities {

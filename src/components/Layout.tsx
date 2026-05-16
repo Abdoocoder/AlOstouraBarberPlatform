@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { NavLink, Link } from 'react-router-dom';
-import { Scissors, Calendar, Image as ImageIcon, MapPin, Phone, Menu, X } from 'lucide-react';
+import { Scissors, Calendar, Image as ImageIcon, MapPin, Phone, Menu, X, ChevronLeft } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { SignedIn, SignedOut, UserButton } from '@clerk/clerk-react';
@@ -95,35 +95,82 @@ export function Navbar() {
       {/* Mobile Nav */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            id="mobile-nav"
-            role="navigation"
-            aria-label="القائمة الرئيسية"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
-            onKeyDown={(e) => { if (e.key === 'Escape') setIsOpen(false); }}
-            className="absolute top-full left-0 right-0 bg-brand-surface-container border-t border-brand-outline-variant p-6 flex flex-col gap-4 md:hidden"
-          >
-            {navItems.map((item) => (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                onClick={() => setIsOpen(false)}
-                className="text-lg font-bold text-brand-on-surface hover:text-brand-primary transition-colors"
-              >
-                {item.name}
-              </NavLink>
-            ))}
-            <Link 
-              to="/booking"
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               onClick={() => setIsOpen(false)}
-              className="mt-2 w-full py-4 bg-brand-primary text-brand-on-primary text-center font-bold press-active"
+              className="fixed inset-0 bg-brand-surface/60 backdrop-blur-sm z-[-1] md:hidden"
+            />
+            <motion.div
+              id="mobile-nav"
+              role="navigation"
+              aria-label="القائمة الرئيسية"
+              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+              onKeyDown={(e) => { if (e.key === 'Escape') setIsOpen(false); }}
+              className="absolute top-full left-0 right-0 bg-brand-surface-container border-t border-brand-outline-variant p-8 flex flex-col gap-6 md:hidden shadow-2xl"
             >
-              احجز موعدك
-            </Link>
-          </motion.div>
+              {navItems.map((item, i) => (
+                <motion.div
+                  key={item.path}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.05 + 0.1 }}
+                >
+                  <NavLink
+                    to={item.path}
+                    onClick={() => setIsOpen(false)}
+                    className={({ isActive }) => cn(
+                      "text-2xl font-black transition-colors flex items-center justify-between group",
+                      isActive ? "text-brand-primary" : "text-brand-on-surface hover:text-brand-primary"
+                    )}
+                  >
+                    {item.name}
+                    <motion.div
+                      initial={{ scaleX: 0 }}
+                      whileHover={{ scaleX: 1 }}
+                      className="h-px bg-brand-primary flex-grow mx-4 origin-right"
+                    />
+                    <ChevronLeft className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity rtl:rotate-180" />
+                  </NavLink>
+                </motion.div>
+              ))}
+
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: navItems.length * 0.05 + 0.1 }}
+                className="pt-4 border-t border-brand-outline-variant/30"
+              >
+                <Link
+                  to="/booking"
+                  onClick={() => setIsOpen(false)}
+                  className="w-full py-5 bg-brand-primary text-brand-on-primary text-center font-black text-lg press-active shadow-[0_0_20px_rgba(242,202,80,0.2)] block"
+                >
+                  احجز موعدك الآن
+                </Link>
+
+                <div className="flex justify-center gap-8 mt-8">
+                  <SignedIn>
+                    <UserButton afterSignOutUrl="/" />
+                  </SignedIn>
+                  <SignedOut>
+                    <Link
+                      to="/sign-in"
+                      onClick={() => setIsOpen(false)}
+                      className="text-sm font-bold text-brand-on-surface hover:text-brand-primary transition-colors"
+                    >
+                      تسجيل الدخول
+                    </Link>
+                  </SignedOut>
+                </div>
+              </motion.div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </nav>

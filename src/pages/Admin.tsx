@@ -93,13 +93,13 @@ export default function Admin() {
         </div>
 
         {/* Tabs */}
-        <div className="flex flex-wrap gap-2 mb-10 border-b border-brand-outline-variant">
+        <div className="flex overflow-x-auto no-scrollbar gap-2 mb-10 border-b border-brand-outline-variant -mx-6 px-6 scroll-smooth">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                "flex items-center gap-2 px-5 py-3 font-black text-sm transition-[background-color,color,border-color] duration-200 border-b-2 -mb-[1px]",
+                "flex items-center gap-2 px-5 py-3 font-black text-sm transition-[background-color,color,border-color] duration-200 border-b-2 -mb-[1px] whitespace-nowrap shrink-0",
                 activeTab === tab.id
                   ? "border-brand-primary text-brand-primary bg-brand-primary/5"
                   : "border-transparent text-brand-on-surface-variant hover:text-brand-primary hover:border-brand-primary/40"
@@ -209,8 +209,9 @@ function DashboardTab() {
           <div className="p-6 border-b border-brand-outline-variant flex justify-between items-center bg-brand-surface-container-high">
             <h3 className="text-xl font-black">جميع المواعيد</h3>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-right">
+          <div className="md:overflow-x-auto">
+            {/* Desktop Table */}
+            <table className="w-full text-right hidden md:table">
               <thead>
                 <tr className="text-brand-on-surface-variant font-bold text-sm bg-brand-surface-container-highest/20 border-b border-brand-outline-variant">
                   <th className="p-6">الـعـمـيـل</th>
@@ -223,62 +224,121 @@ function DashboardTab() {
                 </tr>
               </thead>
               <tbody>
-                {filteredBookings.length > 0 ? (
-                  filteredBookings.map((booking) => (
-                    <tr key={booking._id} className="border-b border-brand-outline-variant/30 hover:bg-brand-surface transition-colors">
-                      <td className="p-6 font-bold">{booking.customerName}</td>
-                      <td className="p-6 text-brand-on-surface-variant italic">{booking.serviceName}</td>
-                      <td className="p-6 text-brand-on-surface-variant">{booking.date}</td>
-                      <td className="p-6 flex items-center gap-2">
+                {filteredBookings.length > 0 && filteredBookings.map((booking) => (
+                  <tr key={booking._id} className="border-b border-brand-outline-variant/30 hover:bg-brand-surface transition-colors">
+                    <td className="p-6 font-bold">{booking.customerName}</td>
+                    <td className="p-6 text-brand-on-surface-variant italic">{booking.serviceName}</td>
+                    <td className="p-6 text-brand-on-surface-variant">{booking.date}</td>
+                    <td className="p-6">
+                      <div className="flex items-center gap-2">
                         <Clock size={16} className="text-brand-primary" />
                         {booking.time}
-                      </td>
-                      <td className="p-6 font-black text-brand-primary">{booking.price} د.أ</td>
-                      <td className="p-6">
-                        <span className={cn(
-                          "px-4 py-1.5 text-sm font-black uppercase italic",
-                          booking.status === 'completed' && "bg-green-500/10 text-green-500 border border-green-500/50",
-                          booking.status === 'confirmed' && "bg-blue-500/10 text-blue-500 border border-blue-500/50",
-                          booking.status === 'pending' && "bg-yellow-500/10 text-yellow-500 border border-yellow-500/50",
-                          booking.status === 'cancelled' && "bg-red-500/10 text-red-500 border border-red-500/50",
-                        )}>
-                          {booking.status === 'completed' ? 'تمت'
-                            : booking.status === 'confirmed' ? 'مؤكد'
-                            : booking.status === 'pending' ? 'قيد الانتظار'
-                            : 'ملغي'}
-                        </span>
-                      </td>
-                      <td className="p-6">
-                        <div className="flex gap-2">
-                            <button
-                              onClick={() => handleConfirm(booking._id)}
-                              disabled={booking.status === 'confirmed' || booking.status === 'completed' || booking.status === 'cancelled'}
-                              className="p-3 bg-brand-surface-container border border-brand-outline-variant text-green-500 hover:bg-green-500 hover:text-white transition-[background-color,color,border-color,transform] duration-200 active:scale-[0.97] disabled:opacity-30 disabled:cursor-not-allowed"
-                              aria-label="تأكيد الحجز"
-                            >
-                              <CheckCircle2 size={16} />
-                            </button>
-                            <button
-                              onClick={() => handleCancel(booking._id)}
-                              disabled={booking.status === 'cancelled'}
-                              className="p-3 bg-brand-surface-container border border-brand-outline-variant text-red-500 hover:bg-red-500 hover:text-white transition-[background-color,color,border-color,transform] duration-200 active:scale-[0.97] disabled:opacity-30 disabled:cursor-not-allowed"
-                              aria-label="إلغاء الحجز"
-                            >
-                              <XCircle size={16} />
-                            </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={7} className="p-12 text-center text-brand-on-surface-variant font-bold italic">
-                      {allBookings.length === 0 ? 'لا توجد مواعيد بعد.' : 'لا توجد مواعيد بهذا التصنيف حاليًا.'}
+                      </div>
+                    </td>
+                    <td className="p-6 font-black text-brand-primary">{booking.price} د.أ</td>
+                    <td className="p-6">
+                      <span className={cn(
+                        "px-4 py-1.5 text-sm font-black uppercase italic",
+                        booking.status === 'completed' && "bg-green-500/10 text-green-500 border border-green-500/50",
+                        booking.status === 'confirmed' && "bg-blue-500/10 text-blue-500 border border-blue-500/50",
+                        booking.status === 'pending' && "bg-yellow-500/10 text-yellow-500 border border-yellow-500/50",
+                        booking.status === 'cancelled' && "bg-red-500/10 text-red-500 border border-red-500/50",
+                      )}>
+                        {booking.status === 'completed' ? 'تمت'
+                          : booking.status === 'confirmed' ? 'مؤكد'
+                          : booking.status === 'pending' ? 'قيد الانتظار'
+                          : 'ملغي'}
+                      </span>
+                    </td>
+                    <td className="p-6">
+                      <div className="flex gap-2">
+                          <button
+                            onClick={() => handleConfirm(booking._id)}
+                            disabled={booking.status === 'confirmed' || booking.status === 'completed' || booking.status === 'cancelled'}
+                            className="p-3 bg-brand-surface-container border border-brand-outline-variant text-green-500 hover:bg-green-500 hover:text-white transition-[background-color,color,border-color,transform] duration-200 active:scale-[0.97] disabled:opacity-30 disabled:cursor-not-allowed"
+                            aria-label="تأكيد الحجز"
+                          >
+                            <CheckCircle2 size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleCancel(booking._id)}
+                            disabled={booking.status === 'cancelled'}
+                            className="p-3 bg-brand-surface-container border border-brand-outline-variant text-red-500 hover:bg-red-500 hover:text-white transition-[background-color,color,border-color,transform] duration-200 active:scale-[0.97] disabled:opacity-30 disabled:cursor-not-allowed"
+                            aria-label="إلغاء الحجز"
+                          >
+                            <XCircle size={16} />
+                          </button>
+                      </div>
                     </td>
                   </tr>
-                )}
+                ))}
               </tbody>
             </table>
+
+            {/* Mobile Cards */}
+            <div className="md:hidden divide-y divide-brand-outline-variant">
+              {filteredBookings.length > 0 && filteredBookings.map((booking) => (
+                <div key={booking._id} className="p-6 space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="font-black text-lg">{booking.customerName}</div>
+                      <div className="text-brand-on-surface-variant text-sm italic">{booking.serviceName}</div>
+                    </div>
+                    <span className={cn(
+                      "px-3 py-1 text-xs font-black uppercase italic",
+                      booking.status === 'completed' && "bg-green-500/10 text-green-500 border border-green-500/50",
+                      booking.status === 'confirmed' && "bg-blue-500/10 text-blue-500 border border-blue-500/50",
+                      booking.status === 'pending' && "bg-yellow-500/10 text-yellow-500 border border-yellow-500/50",
+                      booking.status === 'cancelled' && "bg-red-500/10 text-red-500 border border-red-500/50",
+                    )}>
+                      {booking.status === 'completed' ? 'تمت'
+                        : booking.status === 'confirmed' ? 'مؤكد'
+                        : booking.status === 'pending' ? 'قيد الانتظار'
+                        : 'ملغي'}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="flex items-center gap-2 text-brand-on-surface-variant">
+                      <Calendar size={14} className="text-brand-primary" />
+                      {booking.date}
+                    </div>
+                    <div className="flex items-center gap-2 text-brand-on-surface-variant">
+                      <Clock size={14} className="text-brand-primary" />
+                      {booking.time}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2">
+                    <div className="font-black text-brand-primary">{booking.price} د.أ</div>
+                    <div className="flex gap-2">
+                        <button
+                          onClick={() => handleConfirm(booking._id)}
+                          disabled={booking.status === 'confirmed' || booking.status === 'completed' || booking.status === 'cancelled'}
+                          className="px-4 py-2 bg-brand-surface-container border border-brand-outline-variant text-green-500 hover:bg-green-500 hover:text-white transition-[background-color,color,border-color,transform] duration-200 active:scale-[0.97] disabled:opacity-30 flex items-center gap-2 text-xs font-black"
+                        >
+                          <CheckCircle2 size={14} />
+                          تأكيد
+                        </button>
+                        <button
+                          onClick={() => handleCancel(booking._id)}
+                          disabled={booking.status === 'cancelled'}
+                          className="px-4 py-2 bg-brand-surface-container border border-brand-outline-variant text-red-500 hover:bg-red-500 hover:text-white transition-[background-color,color,border-color,transform] duration-200 active:scale-[0.97] disabled:opacity-30 flex items-center gap-2 text-xs font-black"
+                        >
+                          <XCircle size={14} />
+                          إلغاء
+                        </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {filteredBookings.length === 0 && (
+              <div className="p-12 text-center text-brand-on-surface-variant font-bold italic">
+                {allBookings.length === 0 ? 'لا توجد مواعيد بعد.' : 'لا توجد مواعيد بهذا التصنيف حاليًا.'}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -339,8 +399,9 @@ function ServicesTab() {
       </div>
 
       <div className="bg-brand-surface-container border border-brand-outline-variant overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-right">
+        <div className="md:overflow-x-auto">
+          {/* Desktop Table */}
+          <table className="w-full text-right hidden md:table">
             <thead>
               <tr className="text-brand-on-surface-variant font-bold text-sm bg-brand-surface-container-highest/20 border-b border-brand-outline-variant">
                 <th className="p-6">الاسم</th>
@@ -369,15 +430,43 @@ function ServicesTab() {
                   </td>
                 </tr>
               ))}
-              {services.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="p-12 text-center text-brand-on-surface-variant font-bold italic">
-                    لا توجد خدمات بعد. اضف خدمة جديدة أو استخدم التجهيز الافتراضي.
-                  </td>
-                </tr>
-              )}
             </tbody>
           </table>
+
+          {/* Mobile Cards */}
+          <div className="md:hidden divide-y divide-brand-outline-variant">
+            {services.map((s) => (
+              <div key={s._id} className="p-6 space-y-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <div className="font-black text-lg">{s.name}</div>
+                    <div className="text-brand-on-surface-variant text-sm">{categoryMeta.find(c => c.id === s.category)?.label}</div>
+                  </div>
+                  <div className="font-black text-brand-primary">{s.price} د.أ</div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm text-brand-on-surface-variant font-bold">
+                    <Clock size={14} className="text-brand-primary" />
+                    {s.durationMinutes} دقيقة
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => openEdit(s)} className="p-2 border border-brand-outline-variant text-brand-primary active:scale-95" aria-label="تعديل الخدمة">
+                      <Pencil size={16} />
+                    </button>
+                    <button onClick={() => removeService({ id: s._id })} className="p-2 border border-brand-outline-variant text-red-500 active:scale-95" aria-label="حذف الخدمة">
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {services.length === 0 && (
+            <div className="p-12 text-center text-brand-on-surface-variant font-bold italic">
+              لا توجد خدمات بعد. اضف خدمة جديدة أو استخدم التجهيز الافتراضي.
+            </div>
+          )}
         </div>
       </div>
 
@@ -461,8 +550,9 @@ function GalleryTab() {
       </div>
 
       <div className="bg-brand-surface-container border border-brand-outline-variant overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-right">
+        <div className="md:overflow-x-auto">
+          {/* Desktop Table */}
+          <table className="w-full text-right hidden md:table">
             <thead>
               <tr className="text-brand-on-surface-variant font-bold text-sm bg-brand-surface-container-highest/20 border-b border-brand-outline-variant">
                 <th className="p-6">الصورة</th>
@@ -493,15 +583,36 @@ function GalleryTab() {
                   </td>
                 </tr>
               ))}
-              {items.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="p-12 text-center text-brand-on-surface-variant font-bold italic">
-                    لا توجد صور في المعرض بعد.
-                  </td>
-                </tr>
-              )}
             </tbody>
           </table>
+
+          {/* Mobile Cards */}
+          <div className="md:hidden divide-y divide-brand-outline-variant">
+            {items.map((item) => (
+              <div key={item._id} className="p-4 flex gap-4 items-center">
+                <img src={item.url} alt={item.title} className="w-20 h-20 object-cover grayscale shrink-0 border border-brand-outline-variant" />
+                <div className="flex-grow">
+                  <div className="font-black">{item.title}</div>
+                  <div className="text-sm text-brand-on-surface-variant">{item.category}</div>
+                  <div className="text-xs text-brand-outline mt-1 italic">ترتيب: {item.order}</div>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <button onClick={() => openEdit(item)} className="p-2 border border-brand-outline-variant text-brand-primary" aria-label="تعديل الصورة">
+                    <Pencil size={14} />
+                  </button>
+                  <button onClick={() => removeItem({ id: item._id })} className="p-2 border border-brand-outline-variant text-red-500" aria-label="حذف الصورة">
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {items.length === 0 && (
+            <div className="p-12 text-center text-brand-on-surface-variant font-bold italic">
+              لا توجد صور في المعرض بعد.
+            </div>
+          )}
         </div>
       </div>
 
@@ -545,8 +656,11 @@ function MessagesTab() {
   const selected = messages.find(m => m._id === selectedId);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-      <div className="bg-brand-surface-container border border-brand-outline-variant overflow-hidden">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 relative">
+      <div className={cn(
+        "bg-brand-surface-container border border-brand-outline-variant overflow-hidden",
+        selectedId && "max-lg:hidden"
+      )}>
         <div className="p-6 border-b border-brand-outline-variant bg-brand-surface-container-high">
           <h3 className="text-xl font-black">الرسائل الواردة</h3>
         </div>
@@ -574,11 +688,21 @@ function MessagesTab() {
         </div>
       </div>
 
-      <div className="bg-brand-surface-container border border-brand-outline-variant overflow-hidden">
+      <div className={cn(
+        "bg-brand-surface-container border border-brand-outline-variant overflow-hidden",
+        !selectedId && "max-lg:hidden"
+      )}>
         {selected ? (
           <div className="flex flex-col h-full">
             <div className="p-6 border-b border-brand-outline-variant bg-brand-surface-container-high flex justify-between items-center">
-              <div>
+              <button
+                onClick={() => setSelectedId(null)}
+                className="lg:hidden p-2 -mr-2 text-brand-primary"
+                aria-label="العودة للقائمة"
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
+              <div className="flex-grow">
                 <h3 className="text-xl font-black">{selected.subject}</h3>
                 <p className="text-sm text-brand-on-surface-variant mt-1">
                   {selected.name} &lt;{selected.email}&gt;
